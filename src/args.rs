@@ -25,11 +25,13 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Uses directory/file enumeration mode
+    /// Parses times into decimal
     Time(Time),
 }
 
 #[derive(Args)]
 pub struct Time {
-
+    /// The times to convert (multiple times separated by a comma)
+    #[arg(short, long, value_delimiter=',')]
+    pub times: Vec<String>,
 }
