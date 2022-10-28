@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.22"
-clap = "4.0.18"
+clap = {version = "4.0.18", features = ["env", "derive"]}
 owo-colors = "3.5.0"
