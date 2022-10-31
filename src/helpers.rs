@@ -1,7 +1,7 @@
-use owo_colors::OwoColorize;
-use time::Time;
-use time::error::Parse;
+use owo_colors::{OwoColorize, Style};
+use std::fs::File;
 use time::format_description;
+use time::Time;
 
 pub fn print_header() {
     let s = r#"
@@ -11,17 +11,25 @@ pub fn print_header() {
      |    |   \  |  /\___ \  |  | |  |  Y Y  \  ___/ 
      |____|_  /____//____  > |__| |__|__|_|  /\___  >
             \/           \/                \/     \/ 
-    "#.red();
+    Converting times because we're lazy."#
+        .red();
+    let info_style = Style::new().yellow().bold();
+    let info = r#"    --------------------------------------
+    : Created by: Nick Conklin           :
+    : 2022                               :
+    --------------------------------------"#
+        .style(info_style);
     println!("{}", s);
+    println!("{}", info);
 }
 
-pub fn convert_time(entered_time: &str) -> f64 {
-    let format = format_description::parse("[hour]:[minute]").unwrap();
-    let time = Time::parse(entered_time, &format).expect("Incorrect time format");
-    
-    let minutes = time.minute() as f64;
-    let decimal_minutes: f64 = minutes / 60.0;
+pub fn convert_times(entered_times: Vec<String>) -> Result<Vec<f64>, time::error::Parse> {
+    let format = format_description::parse("[hour]:[minute]")
+        .expect("Programming error: Invalid time formatter.");
 
-    decimal_minutes
+    entered_times
+        .iter()
+        .map(|time| Time::parse(time, &format))
+        .map(|maybe_parsed_time| maybe_parsed_time.map(|time| time.minute() as f64 / 60.0))
+        .collect::<Result<Vec<_>, time::error::Parse>>()
 }
-
