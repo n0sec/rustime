@@ -52,9 +52,9 @@ pub fn read_file(path_to_file: String) -> Result<Vec<f64>, ReadTimesError> {
     let format = format_description::parse("[hour]:[minute]")
         .expect("Programming error: Invalid time formatter.");
 
-    reader.lines().for_each(|line| {
-        line.map(|time| Time::parse(&time, &format))
-            .map(|maybe_parsed_time| maybe_parsed_time.map(|time| time.minute() as f64 / 60.0))
-            .collect::<Result<Vec<_>, ReadTimesError>>()
-    })
+    let file_lines = std::fs::read_to_string(path_to_file)?.lines();
+
+    file_lines.into_iter().map(|time| Time::parse(time, &format))
+    .map(|maybe_parsed_time| maybe_parsed_time.map(|time| time.minute() as f64 / 60.0))
+    .collect::<Result<Vec<_>, ReadTimesError>>()
 }
