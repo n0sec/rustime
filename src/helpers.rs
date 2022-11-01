@@ -1,7 +1,17 @@
 use owo_colors::{OwoColorize, Style};
 use std::fs::File;
+use std::io::BufRead;
+use std::io::BufReader;
 use time::format_description;
 use time::Time;
+
+#[derive(thiserror::Error, Debug)]
+enum ReadTimesError {
+    #[error(transparent)]
+    FileError(#[from] std::io::Error),
+    #[error(transparent)]
+    TimeError(#[from] time::error::Parse),
+}
 
 pub fn print_header() {
     let s = r#"
@@ -32,4 +42,19 @@ pub fn convert_times(entered_times: Vec<String>) -> Result<Vec<f64>, time::error
         .map(|time| Time::parse(time, &format))
         .map(|maybe_parsed_time| maybe_parsed_time.map(|time| time.minute() as f64 / 60.0))
         .collect::<Result<Vec<_>, time::error::Parse>>()
+}
+
+pub fn read_file(path_to_file: String) -> Result<Vec<f64>, ReadTimesError> {
+    // Read the file
+    let mut f = File::open(path_to_file)?;
+    let reader = BufReader::new(f);
+
+    let format = format_description::parse("[hour]:[minute]")
+        .expect("Programming error: Invalid time formatter.");
+
+    reader.lines().for_each(|line| {
+        line.map(|time| Time::parse(&time, &format))
+            .map(|maybe_parsed_time| maybe_parsed_time.map(|time| time.minute() as f64 / 60.0))
+            .collect::<Result<Vec<_>, ReadTimesError>>()
+    })
 }
