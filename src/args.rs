@@ -32,6 +32,10 @@ pub enum Commands {
 #[derive(Args)]
 pub struct Time {
     /// The times to convert (multiple times separated by a comma)
-    #[arg(short, long, value_delimiter = ',')]
+    #[arg(short, long, value_delimiter = ',', conflicts_with="file", required = true)]
     pub times: Vec<String>,
+
+    /// The input file to read and parse
+    #[arg(short, long)]
+    pub file: Option<String>,
 }
