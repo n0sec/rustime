@@ -1,10 +1,13 @@
+use std::fs::File;
+use std::io::Write;
+use chrono::Utc;
+use comfy_table::*;
 use owo_colors::{OwoColorize, Style};
 use time::format_description;
 use time::Time;
 use comfy_table::Table;
 
 use crate::args::Cli;
-use crate::args::Commands;
 
 #[derive(thiserror::Error, Debug)]
 pub enum ReadTimesError {
@@ -15,9 +18,8 @@ pub enum ReadTimesError {
 }
 
 pub fn print_header(args: &Cli) {
-    let title_style = Style::new()
-    .red();
-    let info_style = Style::new().yellow().bold();
+    let title_style = Style::new().red();
+    let info_style = Style::new().bright_red().bold();
 
     let s = r#"
     __________                __  .__                
@@ -27,7 +29,8 @@ pub fn print_header(args: &Cli) {
      |____|_  /____//____  > |__| |__|__|_|  /\___  >
             \/           \/                \/     \/ 
     Converting times because we're lazy."#;
-    let info = r#"    --------------------------------------
+    let info = r#"    
+    --------------------------------------
     : Created by: Nick Conklin           :
     : 2022                               :
     --------------------------------------"#;
@@ -44,7 +47,7 @@ pub fn print_header(args: &Cli) {
     }
 }
 
-// TODO: Needs to also return the entered times lol
+
 pub fn convert_times(entered_times: Vec<String>) -> Result<Vec<f64>, time::error::Parse> {
     let format = format_description::parse("[hour]:[minute]")
         .expect("Programming error: Invalid time formatter.");
@@ -56,6 +59,7 @@ pub fn convert_times(entered_times: Vec<String>) -> Result<Vec<f64>, time::error
         .collect::<Result<Vec<_>, time::error::Parse>>()
 }
 
+// TODO: Needs to also return the entered times lol
 pub fn read_file(path_to_file: String) -> Result<Vec<f64>, ReadTimesError> {
     let format = format_description::parse("[hour]:[minute]")
         .expect("Programming error: Invalid time formatter.");
@@ -68,13 +72,30 @@ pub fn read_file(path_to_file: String) -> Result<Vec<f64>, ReadTimesError> {
         .collect::<Result<Vec<_>, ReadTimesError>>()
 }
 
+pub fn write_file(entered_times: Vec<String>) -> Result<File, ReadTimesError> {
+    // Create the file name from a timestamp of UTC::now()
+    let now = Utc::now().format("%m-%d-%Y_%s");
+    let filename = format!("{now}.txt");
+
+    // Create the file
+    let mut file = File::create(filename)?;
+
+    // Write to the file
+    for time in entered_times {
+        file.write(time.as_bytes())?;
+    };
+
+    // Return the file
+    Ok(file)
+}
+
 // TODO: Pretty Print Table of Results
 pub fn pretty_print_results(results: Vec<f64>) -> () {
     // Create the table
     let mut table = Table::new();
 
     // Set the header before adding rows
-    table.set_header(vec!["Times", "Converted Output"]);
+    table.set_header(vec![Cell::new("Times").fg(Color::Blue).add_attribute(Attribute::Bold), Cell::new("Converted Output").fg(Color::Blue).add_attribute(Attribute::Bold)]);
 
     // Loop over the Vector of results and create rows of the times and converted output
     for result in results {
@@ -84,3 +105,5 @@ pub fn pretty_print_results(results: Vec<f64>) -> () {
     // Print the table
     println!("{table}");
 }
+
+
