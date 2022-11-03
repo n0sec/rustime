@@ -1,7 +1,7 @@
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser)]
-#[clap(author, version, about)]
+#[command(author, version, about, long_about=None)]
 pub struct Cli {
     /// Don't print the banner and other noise
     #[arg(short, long, global = true, help_heading = "Flags")]
@@ -20,20 +20,20 @@ pub struct Cli {
     pub output: Option<String>,
 
     #[command(subcommand)]
-    pub command: Option<Commands>,
+    pub command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Parses times into decimal
-    Time(Time),
+    Time(TimeOptions),
 }
 
-#[derive(Args)]
-pub struct Time {
+#[derive(Args, Debug)]
+pub struct TimeOptions {
     /// The times to convert (multiple times separated by a comma)
-    #[arg(short, long, value_delimiter = ',', conflicts_with="file", required = true)]
-    pub times: Vec<String>,
+    #[arg(short, long, value_delimiter = ',', conflicts_with="file")]
+    pub times: Option<Vec<String>>,
 
     /// The input file to read and parse
     #[arg(short, long)]
