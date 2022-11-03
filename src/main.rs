@@ -18,7 +18,6 @@ fn main() {
     match args.command {
         Commands::Time(options) => {
             match (options.times, options.file) {
-                (Some(_), Some(_)) => unreachable!(),
                 (Some(times), _) => {
                     let converted_times = convert_times(times);
                     pretty_print_results(converted_times);
@@ -27,7 +26,7 @@ fn main() {
                     let converted_times = read_file(path_to_file);
                     pretty_print_results(converted_times);
                 },
-                (None, None) => unreachable!()
+                (None, None) => println!("No options detected"),
             }
         }
     }
