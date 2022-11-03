@@ -1,3 +1,4 @@
+use anyhow::Result;
 use chrono::Utc;
 use comfy_table::Table;
 use comfy_table::*;
@@ -47,17 +48,17 @@ pub fn print_header(args: &Cli) {
     }
 }
 
-pub fn convert_times(entered_times: Vec<String>) -> Result<Vec<f64>, time::error::Parse> {
+pub fn convert_times(entered_times: Vec<String>) -> Result<Vec<(String, f64)>, ReadTimesError> {
     let format = format_description::parse("[hour]:[minute]")
         .expect("Programming error: Invalid time formatter.");
 
     entered_times
         .iter()
-        .map(|time| Time::parse(time, &format))
-        .map(|maybe_parsed_time| {
-            maybe_parsed_time.map(|time| (time.minute() as f64 / 60.0) + time.hour() as f64)
+        .map(|time| (time, Time::parse(time, &format).map_err(ReadTimesError::from)))
+        .map(|(time, maybe_parsed_time)| {
+            maybe_parsed_time.map(|time| (time.to_string(), ((time.minute() as f64 / 60.0) + time.hour() as f64)))
         })
-        .collect::<Result<Vec<_>, time::error::Parse>>()
+        .collect::<Result<Vec<(String, f64)>, ReadTimesError>>()
 }
 
 pub fn read_file(path_to_file: String) -> Result<Vec<(String, f64)>, ReadTimesError> {
@@ -73,7 +74,7 @@ pub fn read_file(path_to_file: String) -> Result<Vec<(String, f64)>, ReadTimesEr
                 Time::parse(time, &format).map_err(ReadTimesError::from),
             )
         })
-        .map(|(time, parsed)| parsed.map(|parsed| (time.to_owned(), parsed.minute() as f64 / 60.0)))
+        .map(|(time, parsed)| parsed.map(|parsed| (time.to_owned(), (parsed.minute() as f64 / 60.0) + parsed.hour() as f64)))
         .collect::<Result<Vec<_>, ReadTimesError>>()
 }
 
@@ -94,8 +95,7 @@ pub fn write_file(entered_times: Vec<String>) -> Result<File, ReadTimesError> {
     Ok(file)
 }
 
-// TODO: Pretty Print Table of Results
-pub fn pretty_print_results(results: Vec<f64>) -> () {
+pub fn pretty_print_results(results: Result<Vec<(String, f64)>, ReadTimesError>) -> () {
     // Create the table
     let mut table = Table::new();
 
@@ -110,8 +110,10 @@ pub fn pretty_print_results(results: Vec<f64>) -> () {
     ]);
 
     // Loop over the Vector of results and create rows of the times and converted output
-    for result in results {
-        table.add_row(vec!["12:05", &result.to_string()]);
+    for (time, converted_time) in results.unwrap() {
+        let formatted_time = format!("{:.2}", converted_time);
+        
+        table.add_row(vec![time, formatted_time]);
     }
 
     // Print the table
