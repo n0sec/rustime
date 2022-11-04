@@ -1,34 +1,39 @@
 mod args;
 mod helpers;
 
-use args::Cli;
-use args::Commands;
+use args::CliOptions;
 use clap::Parser;
-use helpers::print_header;
-use helpers::read_file;
-use helpers::{pretty_print_results, convert_times};
+use helpers::*;
 fn main() {
-    let args = Cli::parse();
+    let args = CliOptions::parse();
 
-    match args.quiet {
-        true => {},
-        false => print_header(&args),
-    }
-
-    match args.command {
-        Commands::Time(options) => {
-            match (options.times, options.file) {
-                (Some(times), _) => {
-                    let converted_times = convert_times(times);
-                    pretty_print_results(converted_times);
-                },
-                (_, Some(path_to_file)) => {
-                    let converted_times = read_file(path_to_file);
-                    pretty_print_results(converted_times);
-                },
-                (None, None) => println!("No options detected"),
-            }
+    if !args.times.is_empty() {
+        if let false = args.quiet {
+            print_header();
+        }
+        let converted_times = convert_times(args.times);
+        let results = pretty_print_results(converted_times);
+        match results {
+            Ok(_) => (),
+            Err(e) => println!("{}", e)
         }
     }
+
+    if let Some(filename) = args.file {
+        if let false = args.quiet {
+            print_header();
+        }
+        let converted_times = read_file(filename);
+        let results = pretty_print_results(converted_times);
+        match results {
+            Ok(_) => (),
+            Err(e) => println!("{}", e)
+        }
+    }
+
+    // if let Some(filename) = args.output {
+    //     write_file(args.times, filename);
+    // }
+
 
 }
