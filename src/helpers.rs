@@ -12,7 +12,7 @@ use time::Time;
 pub enum ReadTimesError {
     #[error("Something went wrong with reading the file. Either the file does not exist or the file path provided was incorrect.")]
     FileError(#[from] std::io::Error),
-    #[error(transparent)]
+    #[error("There was an issue with parsing times. Did you make sure it was in hh:mm format?")]
     TimeError(#[from] time::error::Parse),
 }
 
@@ -55,7 +55,7 @@ pub fn read_file(path_to_file: String) -> Result<Vec<(String, f64)>, ReadTimesEr
     let format = format_description::parse("[hour]:[minute]")
         .expect("Programming error: Invalid time formatter.");
 
-    let file = std::fs::read_to_string(path_to_file).unwrap();
+    let file = std::fs::read_to_string(path_to_file)?;
 
     file.lines()
         .map(|time| {
@@ -96,7 +96,7 @@ pub fn pretty_print_results(results: Result<Vec<(String, f64)>, ReadTimesError>)
     ]);
 
     // Loop over the Vector of results and create rows of the times and converted output
-    for (time, converted_time) in results.unwrap() {
+    for (time, converted_time) in results? {
         let formatted_time = format!("{:.2}", converted_time);
         
         table.add_row(vec![time, formatted_time]);
