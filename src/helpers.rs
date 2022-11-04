@@ -1,24 +1,22 @@
 use anyhow::Result;
-use chrono::Utc;
 use comfy_table::Table;
 use comfy_table::*;
+use indicatif::ProgressBar;
 use owo_colors::{OwoColorize, Style};
 use std::fs::File;
 use std::io::Write;
 use time::format_description;
 use time::Time;
 
-use crate::args::Cli;
-
 #[derive(thiserror::Error, Debug)]
 pub enum ReadTimesError {
-    #[error(transparent)]
+    #[error("Something went wrong with reading the file. Either the file does not exist or the file path provided was incorrect.")]
     FileError(#[from] std::io::Error),
     #[error(transparent)]
     TimeError(#[from] time::error::Parse),
 }
 
-pub fn print_header(args: &Cli) {
+pub fn print_header() {
     let title_style = Style::new().red();
     let info_style = Style::new().bright_red().bold();
 
@@ -36,16 +34,8 @@ pub fn print_header(args: &Cli) {
     : 2022                               :
     --------------------------------------"#;
 
-    match args.no_color {
-        true => {
-            println!("{}", s);
-            println!("{}", info);
-        }
-        false => {
-            println!("{}", s.style(title_style));
-            println!("{}", info.style(info_style));
-        }
-    }
+    println!("{}", s.style(title_style));
+    println!("{}", info.style(info_style));
 }
 
 pub fn convert_times(entered_times: Vec<String>) -> Result<Vec<(String, f64)>, ReadTimesError> {
@@ -65,7 +55,7 @@ pub fn read_file(path_to_file: String) -> Result<Vec<(String, f64)>, ReadTimesEr
     let format = format_description::parse("[hour]:[minute]")
         .expect("Programming error: Invalid time formatter.");
 
-    let file = std::fs::read_to_string(path_to_file)?;
+    let file = std::fs::read_to_string(path_to_file).unwrap();
 
     file.lines()
         .map(|time| {
@@ -78,11 +68,7 @@ pub fn read_file(path_to_file: String) -> Result<Vec<(String, f64)>, ReadTimesEr
         .collect::<Result<Vec<_>, ReadTimesError>>()
 }
 
-pub fn write_file(entered_times: Vec<String>) -> Result<File, ReadTimesError> {
-    // Create the file name from a timestamp of UTC::now()
-    let now = Utc::now().format("%m-%d-%Y_%s");
-    let filename = format!("{now}.txt");
-
+pub fn write_file(entered_times: Vec<String>, filename: String) -> Result<File, ReadTimesError> {
     // Create the file
     let mut file = File::create(filename)?;
 
@@ -95,7 +81,7 @@ pub fn write_file(entered_times: Vec<String>) -> Result<File, ReadTimesError> {
     Ok(file)
 }
 
-pub fn pretty_print_results(results: Result<Vec<(String, f64)>, ReadTimesError>) -> () {
+pub fn pretty_print_results(results: Result<Vec<(String, f64)>, ReadTimesError>) -> Result<(), ReadTimesError> {
     // Create the table
     let mut table = Table::new();
 
@@ -118,4 +104,6 @@ pub fn pretty_print_results(results: Result<Vec<(String, f64)>, ReadTimesError>)
 
     // Print the table
     println!("{table}");
+
+    Ok(())
 }
