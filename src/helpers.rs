@@ -38,7 +38,7 @@ pub fn print_header() {
     println!("{}", info.style(info_style));
 }
 
-pub fn convert_times(entered_times: Vec<String>) -> Result<Vec<(String, f64)>, ReadTimesError> {
+pub fn convert_times(entered_times: &Vec<String>) -> Result<Vec<(String, f64)>, ReadTimesError> {
     let format = format_description::parse("[hour]:[minute]")
         .expect("Programming error: Invalid time formatter.");
 
@@ -51,7 +51,7 @@ pub fn convert_times(entered_times: Vec<String>) -> Result<Vec<(String, f64)>, R
         .collect::<Result<Vec<(String, f64)>, ReadTimesError>>()
 }
 
-pub fn read_file(path_to_file: String) -> Result<Vec<(String, f64)>, ReadTimesError> {
+pub fn read_file(path_to_file: &String) -> Result<Vec<(String, f64)>, ReadTimesError> {
     let format = format_description::parse("[hour]:[minute]")
         .expect("Programming error: Invalid time formatter.");
 
@@ -68,7 +68,7 @@ pub fn read_file(path_to_file: String) -> Result<Vec<(String, f64)>, ReadTimesEr
         .collect::<Result<Vec<_>, ReadTimesError>>()
 }
 
-pub fn write_file(entered_times: Vec<String>, filename: String) -> Result<File, ReadTimesError> {
+pub fn write_file(entered_times: &Vec<String>, filename: &String) -> Result<File, ReadTimesError> {
     // Create the file
     let mut file = File::create(filename)?;
 
