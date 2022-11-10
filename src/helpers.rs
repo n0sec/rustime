@@ -17,8 +17,8 @@ pub enum ReadTimesError {
 }
 
 pub fn print_header() {
-    let title_style = Style::new().red();
-    let info_style = Style::new().bright_red().bold();
+    let title_style = Style::new().bright_yellow();
+    let info_style = Style::new().green().bold();
 
     let s = r#"
     __________                __  .__                
@@ -88,10 +88,10 @@ pub fn pretty_print_results(results: Result<Vec<(String, f64)>, ReadTimesError>)
     // Set the header before adding rows
     table.set_header(vec![
         Cell::new("Times")
-            .fg(Color::Blue)
+            .fg(Color::Green)
             .add_attribute(Attribute::Bold),
         Cell::new("Converted Output")
-            .fg(Color::Blue)
+            .fg(Color::Green)
             .add_attribute(Attribute::Bold),
     ]);
 
